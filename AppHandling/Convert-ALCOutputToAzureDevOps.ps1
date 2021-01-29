@@ -10,6 +10,8 @@
   Specify if you want the AzureDevOps output to fail on Error or Warning
  .Parameter DoNotWriteToHost
   Include this switch to return the converted result instead of outputting the result to the Host
+ .Parameter SuccessOnWarning
+  Include this switch to finish the pipeline succcessfull if warnings exists
  .Example
   Compile-AppInBcContainer -containerName test -credential $credential -appProjectFolder "C:\Users\freddyk\Documents\AL\Test" -AzureDevOps
  .Example
@@ -22,7 +24,8 @@ Function Convert-AlcOutputToAzureDevOps {
         [Parameter(Position=1)]
         [ValidateSet('none','error','warning')]
         [string] $FailOn,
-        [switch] $doNotWriteToHost
+        [switch] $doNotWriteToHost,
+        [switch] $successOnWarning
     )
 
     Process {
@@ -80,7 +83,7 @@ Function Convert-AlcOutputToAzureDevOps {
         if (($FailOn -eq 'error' -and $hasError) -or ($FailOn -eq 'warning' -and ($hasError -or $hasWarning))) {
             $errLine = "##vso[task.complete result=Failed;]Failed."
         }
-        elseif ($failOn -eq 'error' -and $hasWarning) {
+        elseif ($failOn -eq 'error' -and $hasWarning -and !$successOnWarning) {
             $errLine = "##vso[task.complete result=SucceededWithIssues;]Succeeded With Issues."
         }
         if ($errLine) {
